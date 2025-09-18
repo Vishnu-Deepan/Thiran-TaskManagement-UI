@@ -125,11 +125,9 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final grouped = _groupedForAllTasks(); // For UI visibility
     final tasksForDay = _tasksForSelectedDay();
 
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.transparent, // Transparent app bar
         elevation: 0,
@@ -208,12 +206,12 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       ),
+
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Colors.white,
         currentIndex: 0, // Home Page Index
         onTap: (index) {
           // Handle the tap for navigation
-          // For now, we just log it to console
           if (index == 0) {
             print('Home tapped');
           } else if (index == 1) {
