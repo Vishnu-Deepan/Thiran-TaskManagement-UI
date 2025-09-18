@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:thiran_assessment/models/taskModel.dart';
+import 'package:thiran_assessment/utils/date_utils.dart';
 
 class TaskCard extends StatelessWidget {
   final Task task;
-  final String daysAgo;
   final VoidCallback onDelete;
 
-  const TaskCard({super.key, required this.task, required this.daysAgo, required this.onDelete});
+  const TaskCard({super.key, required this.task, required this.onDelete});
 
   Color _categoryColor(String cat) {
     switch (cat.toLowerCase()) {
@@ -24,11 +24,11 @@ class TaskCard extends StatelessWidget {
   }
 
   String _timeRange(BuildContext context) {
-    final start = task.startTime;
-    final end = task.endTime;
-    if (start == null && end == null) return '';
-    if (start != null && end != null) return '${start.format(context)} - ${end.format(context)}';
-    if (start != null) return start.format(context);
+    if (task.startTime == null && task.endTime == null) return '';
+    if (task.startTime != null && task.endTime != null) {
+      return '${task.startTime!.format(context)} to ${task.endTime!.format(context)}';
+    }
+    if (task.startTime != null) return task.startTime!.format(context);
     return '';
   }
 
@@ -36,47 +36,193 @@ class TaskCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = _categoryColor(task.category);
 
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 2,
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(12),
-        leading: CircleAvatar(
-          backgroundColor: color.withOpacity(0.12),
-          child: Icon(Icons.task_alt, color: color, semanticLabel: 'Task Icon'),
-        ),
-        title: Text(task.title, style: const TextStyle(fontWeight: FontWeight.w600)),
-        subtitle: Column(
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.lightBlue.shade100.withAlpha(50),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.indigo.withOpacity(0.2),
+            offset: const Offset(-5, -5),
+            blurRadius: 10,
+          ),
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.2),
+            offset: const Offset(5, 5),
+            blurRadius: 10,
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+        child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (task.startTime != null || task.endTime != null) ...[
-              Text(_timeRange(context), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
-              const SizedBox(height: 6),
-            ],
-            Row(
-              children: [
-                Text(daysAgo, style: const TextStyle(fontSize: 12)),
-                const SizedBox(width: 8),
-                Chip(
-                  label: Text(task.category),
-                  backgroundColor: color.withOpacity(0.12),
-                  labelStyle: TextStyle(color: color, fontSize: 12),
-                  visualDensity: VisualDensity.compact,
-                ),
-              ],
+            // Left icon (Neumorphic style)
+            Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.white.withOpacity(0.7),
+                    offset: const Offset(-5, -5),
+                    blurRadius: 10,
+                  ),
+                  BoxShadow(
+                    color: color.withOpacity(0.3),
+                    offset: const Offset(5, 5),
+                    blurRadius: 10,
+                  ),
+                ],
+              ),
+              child: Icon(
+                Icons.calendar_today,
+                color: Colors.black,
+                size: 30,
+                semanticLabel: 'task icon',
+              ),
             ),
-            if (task.description != null && task.description!.isNotEmpty) ...[
-              const SizedBox(height: 6),
-              Text(task.description!, style: const TextStyle(fontSize: 13)),
-            ],
+            const SizedBox(width: 20),
+
+            // Content
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Title
+                  Text(
+                    task.title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      color: Colors.black87,
+                      height: 1.3,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Time + Relative Date + Category - stacked vertically for spacing
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (_timeRange(context).isNotEmpty)
+                        Text(
+                          _timeRange(context),
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.black54,
+                            height: 1.4,
+                          ),
+                        ),
+                      if (_timeRange(context).isNotEmpty) const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Text(
+                            compactRelative(task.date),
+                            style: const TextStyle(
+                              color: Colors.black45,
+                              fontSize: 13,
+                              height: 1.4,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Chip(
+                            label: Text(
+                              task.category,
+                              style: TextStyle(color: color, fontWeight: FontWeight.w600),
+                            ),
+                            backgroundColor: color.withOpacity(0.1),
+                            visualDensity: VisualDensity.compact,
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Description - allow more space, wrap nicely
+                  if (task.description != null && task.description!.isNotEmpty)
+                    Text(
+                      task.description!,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.black54,
+                        height: 1.5,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+
+            // Delete button (Neumorphic)
+            _buildNeumorphicButton(
+              icon: Icons.more_vert,
+              onPressed: () {
+                showModalBottomSheet(
+                  context: context,
+                  builder: (ctx) => SafeArea(
+                    child: Wrap(
+                      children: [
+                        ListTile(
+                          leading: const Icon(Icons.delete, color: Colors.red),
+                          title: const Text('Delete'),
+                          onTap: () {
+                            Navigator.of(ctx).pop();
+                            onDelete();
+                          },
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.close),
+                          title: const Text('Close'),
+                          onTap: () => Navigator.of(ctx).pop(),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
           ],
         ),
-        trailing: IconButton(
-          icon: const Icon(Icons.delete, color: Colors.red),
-          tooltip: 'Delete task',
-          onPressed: onDelete,
+      ),
+    );
+  }
+
+  // Neumorphic button
+  Widget _buildNeumorphicButton({
+    required IconData icon,
+    required VoidCallback onPressed,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(left: 16),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade200,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.white.withOpacity(0.7),
+            offset: const Offset(-5, -5),
+            blurRadius: 10,
+          ),
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.4),
+            offset: const Offset(5, 5),
+            blurRadius: 10,
+          ),
+        ],
+      ),
+      child: IconButton(
+        icon: Icon(
+          icon,
+          size: 28,
+          color: Colors.black45,
         ),
+        onPressed: onPressed,
       ),
     );
   }

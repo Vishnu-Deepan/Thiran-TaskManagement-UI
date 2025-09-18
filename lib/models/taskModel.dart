@@ -19,29 +19,43 @@ class Task {
     this.description,
   });
 
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'title': title,
-    'category': category,
-    'date': date.toIso8601String(),
-    'startHour': startTime?.hour,
-    'startMinute': startTime?.minute,
-    'endHour': endTime?.hour,
-    'endMinute': endTime?.minute,
-    'description': description,
-  };
+  // Static method to convert TimeOfDay to an int (minutes since midnight)
+  static int? timeToMinutes(TimeOfDay? time) {
+    if (time == null) return null;
+    return time.hour * 60 + time.minute;
+  }
 
-  factory Task.fromJson(Map<String, dynamic> j) {
-    TimeOfDay? _toTime(int? h, int? m) => (h != null && m != null) ? TimeOfDay(hour: h, minute: m) : null;
+  // Static method to convert minutes since midnight to TimeOfDay
+  static TimeOfDay? minutesToTime(int? minutes) {
+    if (minutes == null) return null;
+    int hour = minutes ~/ 60;
+    int minute = minutes % 60;
+    return TimeOfDay(hour: hour, minute: minute);
+  }
 
+  // Converts a Task object into a Map (for JSON serialization)
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'category': category,
+      'date': date.toIso8601String(), // Convert DateTime to string
+      'startTime': timeToMinutes(startTime), // Store time as minutes since midnight
+      'endTime': timeToMinutes(endTime), // Store time as minutes since midnight
+      'description': description,
+    };
+  }
+
+  // Creates a Task object from a Map (for JSON deserialization)
+  factory Task.fromJson(Map<String, dynamic> json) {
     return Task(
-      id: j['id'],
-      title: j['title'],
-      category: j['category'],
-      date: DateTime.parse(j['date']),
-      startTime: _toTime(j['startHour'], j['startMinute']),
-      endTime: _toTime(j['endHour'], j['endMinute']),
-      description: j['description'],
+      id: json['id'] as String,
+      title: json['title'] as String,
+      category: json['category'] as String,
+      date: DateTime.parse(json['date'] as String), // Convert string back to DateTime
+      startTime: json['startTime'] != null ? minutesToTime(json['startTime'] as int) : null,
+      endTime: json['endTime'] != null ? minutesToTime(json['endTime'] as int) : null,
+      description: json['description'] as String?,
     );
   }
 }

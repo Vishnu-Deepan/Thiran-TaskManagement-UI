@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:thiran_assessment/screens/TaskListScreen/taskListScreen.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+void main() {
   runApp(const TaskApp());
 }
 
@@ -12,10 +11,14 @@ class TaskApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Task Manager',
-      theme: ThemeData(primarySwatch: Colors.indigo),
-      home: const HomePage(),
+      title: 'Task UI Competition',
       debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        useMaterial3: true,
+        colorSchemeSeed: Colors.blue,
+        brightness: Brightness.light,
+      ),
+      home: const HomePage(),
     );
   }
 }

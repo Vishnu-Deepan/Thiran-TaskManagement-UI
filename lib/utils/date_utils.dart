@@ -1,16 +1,17 @@
 import 'package:intl/intl.dart';
 
-String prettyDateHeader(DateTime date) {
-  return DateFormat('EEE, dd MMM yyyy').format(date);
+/// Pretty header like "Mon, 12 Aug 2025"
+String prettyDateHeader(DateTime d) {
+  return DateFormat('EEE, dd MMM yyyy').format(d);
 }
 
-/// Compact relative days: Today, Yesterday, 2d, 1w, 2m
-String daysAgoCompact(DateTime date) {
+/// Compact relative label for small UI: Today, 1d, 2d, 1w
+String compactRelative(DateTime date) {
   final now = DateTime.now();
   final days = now.difference(DateTime(date.year, date.month, date.day)).inDays;
   if (days == 0) return 'Today';
-  if (days == 1) return 'Yesterday';
+  if (days == 1) return '1d';
   if (days < 7) return '${days}d';
-  if (days < 30) return '${(days / 7).floor()}w';
-  return '${(days / 30).floor()}m';
+  final weeks = (days / 7).floor();
+  return '${weeks}w';
 }

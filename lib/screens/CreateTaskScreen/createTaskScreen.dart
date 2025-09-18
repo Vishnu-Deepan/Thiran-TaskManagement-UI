@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:thiran_assessment/models/taskModel.dart';
+import 'package:thiran_assessment/screens/TaskListScreen/taskListScreen.dart';
 
 class CreateTaskScreen extends StatefulWidget {
   const CreateTaskScreen({super.key});
@@ -11,43 +12,40 @@ class CreateTaskScreen extends StatefulWidget {
 
 class _CreateTaskScreenState extends State<CreateTaskScreen> {
   final _form = GlobalKey<FormState>();
-  final _title = TextEditingController();
-  final _desc = TextEditingController();
+  final _titleCtrl = TextEditingController();
+  final _descCtrl = TextEditingController();
 
-  DateTime? _date;
+  DateTime _selectedDate = DateTime.now();
   TimeOfDay? _start;
   TimeOfDay? _end;
   String _category = 'Work';
 
-  final List<String> categories = ['Work', 'Personal', 'Health', 'Study', 'Other'];
+  final List<String> _categories = ['Work', 'Personal', 'Health', 'Study', 'Other'];
 
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
+      initialDate: _selectedDate,
       firstDate: DateTime(2020),
       lastDate: DateTime(2100),
     );
-    if (picked != null) setState(() => _date = picked);
+    if (picked != null) setState(() => _selectedDate = picked);
   }
 
-  Future<void> _pickTime(bool isStart) async {
+  Future<void> _pickTime(bool start) async {
     final picked = await showTimePicker(context: context, initialTime: TimeOfDay.now());
     if (picked != null) {
       setState(() {
-        if (isStart) _start = picked;
+        if (start) _start = picked;
         else _end = picked;
       });
     }
   }
 
-  void _create() {
+  void _submit() {
     if (!_form.currentState!.validate()) return;
-    if (_date == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please pick a date')));
-      return;
-    }
 
+    // Validate end > start if both present
     if (_start != null && _end != null) {
       final s = _start!.hour * 60 + _start!.minute;
       final e = _end!.hour * 60 + _end!.minute;
@@ -59,12 +57,12 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
 
     final task = Task(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
-      title: _title.text.trim(),
+      title: _titleCtrl.text.trim(),
       category: _category,
-      date: _date!,
+      date: _selectedDate,
       startTime: _start,
       endTime: _end,
-      description: _desc.text.trim().isEmpty ? null : _desc.text.trim(),
+      description: _descCtrl.text.trim().isEmpty ? null : _descCtrl.text.trim(),
     );
 
     Navigator.of(context).pop(task);
@@ -72,88 +70,255 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
 
   @override
   void dispose() {
-    _title.dispose();
-    _desc.dispose();
+    _titleCtrl.dispose();
+    _descCtrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final dateLabel = _date == null ? 'Pick date' : DateFormat.yMMMd().format(_date!);
+    final dateLabel = DateFormat.yMMMd().format(_selectedDate);
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Create Task')),
-      body: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Form(
-          key: _form,
-          child: ListView(
+
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: NetworkImage('https://img.freepik.com/premium-vector/blue-abstract-background-blue-simple-background_680692-48.jpg'), // Replace with your image URL
+            fit: BoxFit.cover,
+            colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.3), BlendMode.darken), // Optional: To dim the image
+          ),
+        ),
+        child: Column(
+          children: [
+            SizedBox(height: 30,),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton(onPressed: () {
+                  Navigator.pushReplacement(context, MaterialPageRoute<void>(
+                    builder: (BuildContext context) => const HomePage(),
+                  ),);
+                }, icon: Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white,)),
+
+                Text("Create New Task", style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 24
+                ),),
+
+                SizedBox(width: 80,),
+
+              ],
+            ),
+            // Top Section: Title and Description
+            _buildTopSection(),
+            SizedBox(height: 10),
+            // Bottom Section: Modal sheet-like container with rounded top corners
+            _buildBottomSection(dateLabel),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTopSection() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSectionTitleWhite('Task Title'),
+          _buildTextField('Enter task title', _titleCtrl),
+          const SizedBox(height: 16),
+          _buildSectionTitleWhite('Description'),
+          _buildTextField('Enter description', _descCtrl, maxLines: 3),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionTitleWhite(String title) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Text(
+        title,
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: Colors.white, // White text color
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomSection(String dateLabel) {
+    return Expanded(
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(60),
+            topRight: Radius.circular(60),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.2),
+              spreadRadius: 3,
+              blurRadius: 8,
+              offset: const Offset(0, -4),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.all(26),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TextFormField(
-                controller: _title,
-                decoration: const InputDecoration(labelText: 'Title', border: OutlineInputBorder()),
-                validator: (v) => (v == null || v.trim().isEmpty) ? 'Title required' : null,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _desc,
-                maxLines: 3,
-                decoration: const InputDecoration(labelText: 'Description (optional)', border: OutlineInputBorder()),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: _pickDate,
-                      icon: const Icon(Icons.calendar_today),
-                      label: Text(dateLabel),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () => _pickTime(true),
-                      icon: const Icon(Icons.access_time),
-                      label: Text(_start == null ? 'Start time' : _start!.format(context)),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () => _pickTime(false),
-                      icon: const Icon(Icons.access_time),
-                      label: Text(_end == null ? 'End time' : _end!.format(context)),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                children: categories.map((c) {
-                  final selected = _category == c;
-                  return ChoiceChip(
-                    label: Text(c),
-                    selected: selected,
-                    onSelected: (_) => setState(() => _category = c),
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _create,
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 12),
-                  child: Text('Create Task', style: TextStyle(fontSize: 16)),
-                ),
-              ),
+              SizedBox(height: 10),
+              _buildSectionTitle('Due Date'),
+              _buildDateTimePicker(dateLabel, _pickDate, Icons.calendar_today),
+              const SizedBox(height: 16),
+              _buildSectionTitle('Time Range'),
+              _buildTimePickerRow(),
+              const SizedBox(height: 16),
+              _buildSectionTitle('Category'),
+              _buildCategorySelector(),
+              const SizedBox(height: 24),
+              _buildSubmitButton(),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.indigo)),
+    );
+  }
+
+  Widget _buildTextField(String label, TextEditingController controller, {int maxLines = 1}) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 2,
+            blurRadius: 6,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: TextFormField(
+        controller: controller,
+        maxLines: maxLines,
+        decoration: InputDecoration(
+          labelText: label,
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.all(14),
+        ),
+        validator: (v) => (v == null || v.trim().isEmpty) ? '$label required' : null,
+      ),
+    );
+  }
+
+  Widget _buildDateTimePicker(String label, void Function() onPressed, IconData icon) {
+    return Container(
+      width: MediaQuery.sizeOf(context).width,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 2,
+            blurRadius: 6,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: OutlinedButton.icon(
+        onPressed: onPressed,
+        icon: Icon(icon, color: Colors.indigo),
+        label: Text(label, style: TextStyle(color: Colors.indigo)),
+        style: OutlinedButton.styleFrom(
+          side: BorderSide(color: Colors.indigo),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTimePickerRow() {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildDateTimePicker(
+            _start == null ? 'Start Time' : _start!.format(context),
+                () => _pickTime(true),
+            Icons.access_time,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _buildDateTimePicker(
+            _end == null ? 'End Time' : _end!.format(context),
+                () => _pickTime(false),
+            Icons.access_time,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCategorySelector() {
+    return Wrap(
+      spacing: 8,
+      children: _categories.map((c) {
+        final selected = _category == c;
+        return ChoiceChip(
+          showCheckmark: false,
+          label: Text(c),
+          selected: selected,
+          onSelected: (_) => setState(() => _category = c),
+          selectedColor: Colors.indigo,
+          labelStyle: TextStyle(color: selected ? Colors.white : Colors.black),
+          shadowColor: Colors.grey.withOpacity(0.5),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildSubmitButton() {
+    return Container(
+      width: MediaQuery.sizeOf(context).width,
+      decoration: BoxDecoration(
+        color: Colors.indigo,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.3),
+            spreadRadius: 5,
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: ElevatedButton(
+        onPressed: _submit,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.indigo,
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          elevation: 0,
+        ),
+        child: const Text('Create Task', style: TextStyle(fontSize: 16,color: Colors.white)),
       ),
     );
   }
