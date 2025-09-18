@@ -105,14 +105,14 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _openCreate() async {
-    final Task? created = await Navigator.pushReplacement(
+    final Task? created = await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const CreateTaskScreen()),
     );
     if (created != null) {
       setState(() {
-        _tasks.add(created);
-        _normalizeTasks();
+        _tasks.add(created); // Add the new task
+        _normalizeTasks();   // Re-sort tasks
       });
     }
   }
@@ -207,52 +207,49 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
 
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.white,
-        currentIndex: 0, // Home Page Index
-        onTap: (index) {
-          // Handle the tap for navigation
-          if (index == 0) {
-            print('Home tapped');
-          } else if (index == 1) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const CreateTaskScreen()),
-            );
-          } else if (index == 2) {
-            // Go to Profile Page
-          }
-        },
-        items: [
-          BottomNavigationBarItem(
-            icon: _buildNeumorphicButton(
-              icon: Icons.home,
-              onPressed: () {},
-              size: 28,
-              iconColor: Colors.blue,
+        bottomNavigationBar: BottomNavigationBar(
+          backgroundColor: Colors.white,
+          currentIndex: 0, // Home Page Index
+          onTap: (index) {
+            if (index == 0) {
+              // Home tapped (already on the HomePage)
+            } else if (index == 1) {
+              // Navigate to Create Task screen
+              _openCreate(); // This will show the CreateTaskScreen and return a task
+            } else if (index == 2) {
+              // Go to Profile Page
+            }
+          },
+          items: [
+            BottomNavigationBarItem(
+              icon: _buildNeumorphicButton(
+                icon: Icons.home,
+                onPressed: () {},
+                size: 28,
+                iconColor: Colors.blue,
+              ),
+              label: 'Home',
             ),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: _buildNeumorphicButton(
-              icon: Icons.add,
-              onPressed: _openCreate,
-              size: 28,
-              iconColor: Colors.green,
+            BottomNavigationBarItem(
+              icon: _buildNeumorphicButton(
+                icon: Icons.add,
+                onPressed: _openCreate, // Open the CreateTaskScreen
+                size: 28,
+                iconColor: Colors.green,
+              ),
+              label: 'Add Task',
             ),
-            label: 'Add Task',
-          ),
-          BottomNavigationBarItem(
-            icon: _buildNeumorphicButton(
-              icon: Icons.person,
-              onPressed: () {},
-              size: 28,
-              iconColor: Colors.orange,
+            BottomNavigationBarItem(
+              icon: _buildNeumorphicButton(
+                icon: Icons.person,
+                onPressed: () {},
+                size: 28,
+                iconColor: Colors.orange,
+              ),
+              label: 'Profile',
             ),
-            label: 'Profile',
-          ),
-        ],
-      ),
+          ],
+        )
     );
   }
 

@@ -36,35 +36,55 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
     final picked = await showTimePicker(context: context, initialTime: TimeOfDay.now());
     if (picked != null) {
       setState(() {
-        if (start) _start = picked;
-        else _end = picked;
+        if (start) {
+          _start = picked;
+        } else {
+          _end = picked;
+        }
       });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Time selection cancelled. Please select a time.')),
+      );
     }
   }
 
   void _submit() {
-    if (!_form.currentState!.validate()) return;
 
-    // Validate end > start if both present
-    if (_start != null && _end != null) {
-      final s = _start!.hour * 60 + _start!.minute;
-      final e = _end!.hour * 60 + _end!.minute;
-      if (e <= s) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('End time must be after start time')));
-        return;
-      }
+    // Check if the title is entered
+    if (_titleCtrl.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a task title')),
+      );
+      return;
     }
 
+    // Validate the category
+    if (_category.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a category')),
+      );
+      return;
+    }
+
+    // Validate the selected date
+    if (_selectedDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a date')),
+      );
+      return;
+    }
+
+    // Create the task object
     final task = Task(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       title: _titleCtrl.text.trim(),
-      category: _category,
-      date: _selectedDate,
-      startTime: _start,
-      endTime: _end,
+      category: _category, // No need for '!' here, since _category is not nullable
+      date: _selectedDate, // No need for '!' here, since _selectedDate is initialized
       description: _descCtrl.text.trim().isEmpty ? null : _descCtrl.text.trim(),
     );
 
+    // Return the task to the previous screen
     Navigator.of(context).pop(task);
   }
 
@@ -80,35 +100,37 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
     final dateLabel = DateFormat.yMMMd().format(_selectedDate);
 
     return Scaffold(
-
       body: Container(
         decoration: BoxDecoration(
           image: DecorationImage(
-            image: NetworkImage('https://img.freepik.com/premium-vector/blue-abstract-background-blue-simple-background_680692-48.jpg'), // Replace with your image URL
+            image: NetworkImage(
+                'https://img.freepik.com/premium-vector/blue-abstract-background-blue-simple-background_680692-48.jpg'), // Replace with your image URL
             fit: BoxFit.cover,
             colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.3), BlendMode.darken), // Optional: To dim the image
           ),
         ),
         child: Column(
           children: [
-            SizedBox(height: 30,),
+            SizedBox(height: 30),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                IconButton(onPressed: () {
-                  Navigator.pushReplacement(context, MaterialPageRoute<void>(
-                    builder: (BuildContext context) => const HomePage(),
-                  ),);
-                }, icon: Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white,)),
-
-                Text("Create New Task", style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 24
-                ),),
-
-                SizedBox(width: 80,),
-
+                IconButton(
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (BuildContext context) => const HomePage(),
+                      ),
+                    );
+                  },
+                  icon: Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+                ),
+                Text(
+                  "Create New Task",
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 24),
+                ),
+                SizedBox(width: 80),
               ],
             ),
             // Top Section: Title and Description
@@ -143,11 +165,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Text(
         title,
-        style: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-          color: Colors.white, // White text color
-        ),
+        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),
       ),
     );
   }
@@ -157,17 +175,9 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(60),
-            topRight: Radius.circular(60),
-          ),
+          borderRadius: const BorderRadius.only(topLeft: Radius.circular(60), topRight: Radius.circular(60)),
           boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.2),
-              spreadRadius: 3,
-              blurRadius: 8,
-              offset: const Offset(0, -4),
-            ),
+            BoxShadow(color: Colors.grey.withOpacity(0.2), spreadRadius: 3, blurRadius: 8, offset: const Offset(0, -4)),
           ],
         ),
         padding: const EdgeInsets.all(26),
@@ -318,7 +328,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           elevation: 0,
         ),
-        child: const Text('Create Task', style: TextStyle(fontSize: 16,color: Colors.white)),
+        child: const Text('Create Task', style: TextStyle(fontSize: 16, color: Colors.white)),
       ),
     );
   }
