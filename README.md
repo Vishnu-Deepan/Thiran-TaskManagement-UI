@@ -5,6 +5,12 @@ This project was developed as part of a coding assessment, focusing on **UI desi
 
 ---
 
+## UI Design
+
+- The design follows a neumorphic-inspired style, giving the interface a soft, modern, and tactile look.
+- Subtle shadows, rounded cards, and smooth gradients are used to keep the UI clean, minimal, and user-friendly.
+- Each component (task cards, input fields, chips, and buttons) was customized to match the overall theme, instead of using default Material styles.
+
 ## Features Implemented
 
 ### Task List Screen (Home Page)
